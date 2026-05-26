@@ -1,0 +1,51 @@
+name: Deploy Japan screener site to Pages
+
+# data/ のCSVや web/ を main に push すると、build_site.py でサイトを生成して
+# GitHub Pages へデプロイする。手動実行(workflow_dispatch)も可。
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "web/**"
+      - "build_site.py"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時デプロイは1本に絞る（古いビルドはキャンセル）
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+# 既存アクション(Node.js 20)を Node.js 24 で実行（2026-06-02 の強制切替に先行対応）
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Build static site
+        run: python build_site.py --out _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

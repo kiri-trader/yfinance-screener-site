@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>日本株スクリーニング by kiri_trader</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-main">
+      <h1 class="site-title">
+        <span class="title-icon">🇯🇵</span>
+        <span class="title-main">日本株スクリーニング</span>
+        <span class="title-by">by kiri_trader</span>
+      </h1>
+      <div class="meta">
+        <label class="date-picker">
+          日付
+          <select id="day-select"></select>
+        </label>
+        <span id="day-count" class="pill"></span>
+      </div>
+    </div>
+    <p id="screening-summary" class="summary"></p>
+    <p id="generated-at" class="generated"></p>
+  </header>
+
+  <main>
+    <section id="insights" class="cards" aria-label="示唆"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>抽出リスト</h2>
+        <div class="controls">
+          <input id="filter" type="search" placeholder="コード/銘柄名/業種で絞り込み" autocomplete="off">
+          <label class="rs-min">RS≥ <input id="rs-min" type="number" min="0" max="99" step="1" placeholder="0"></label>
+          <details class="col-menu">
+            <summary>列</summary>
+            <div id="col-checkboxes" class="col-checkboxes"></div>
+          </details>
+          <button id="copy-tv" type="button" title="TradingViewウォッチリスト取込用テキストをコピー（TSE:形式）">TVリストをコピー</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="screen-table">
+          <thead><tr id="screen-head"></tr></thead>
+          <tbody id="screen-body"></tbody>
+        </table>
+      </div>
+      <p id="table-empty" class="empty" hidden>該当なし</p>
+    </section>
+
+    <section class="panel" id="trend-panel">
+      <div class="panel-head">
+        <h2>業種RS<span class="head-note">（Sector33ランキング・全期間の推移）</span></h2>
+        <div class="controls">
+          <input id="trend-filter" type="search" placeholder="業種/セクターで絞り込み" autocomplete="off">
+          <label class="rs-min">単位 <select id="trend-gran">
+            <option value="day">日次</option>
+            <option value="week" selected>週次</option>
+          </select></label>
+          <label class="rs-min">表示 <select id="trend-mode">
+            <option value="rs">RS値</option>
+            <option value="rank" selected>順位</option>
+          </select></label>
+          <label class="rs-min">並び <select id="trend-sort">
+            <option value="latest">最新RS順</option>
+            <option value="delta">上昇幅順</option>
+            <option value="name">業種名順</option>
+          </select></label>
+          <label class="rs-min">件数 <select id="trend-limit">
+            <option value="30">上位30</option>
+            <option value="50">上位50</option>
+            <option value="0" selected>全部</option>
+          </select></label>
+        </div>
+      </div>
+      <div id="trend-movers" class="movers"></div>
+      <div class="table-wrap heatmap-wrap">
+        <table id="heatmap" class="heatmap">
+          <thead id="heatmap-head"></thead>
+          <tbody id="heatmap-body"></tbody>
+        </table>
+      </div>
+      <p id="trend-empty" class="empty" hidden>業種RSの時系列データが足りません（2日以上必要）。</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>RS / 業種RS は IBD近似（yfinance_screener 算出 / J-Quants + Yahoo Finance データ）。市場データの正確性は保証されません。</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
