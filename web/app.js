@@ -244,8 +244,8 @@ function renderInsights() {
 
   // Top業種（抽出銘柄が属する業種を、業種RS順位の上位5つまで）
   const topCard = el("div", { class: "card" },
-    el("h3", { title: "抽出銘柄が属する業種を業種RS順位の上位5つまで表示。順位はその日の業種RS全体での順位なので、抽出銘柄が無い業種は飛ぶことがあります。" },
-      "🏆 Top業種"));
+    el("h3", { title: "抽出銘柄が属するIndustryをIndustry RS順位の上位5つまで表示。順位はその日のIndustry RS全体での順位なので、抽出銘柄が無いIndustryは飛ぶことがあります。" },
+      "🏆 Top Industry"));
   const tops = ins.top_industries || [];
   if (tops.length) {
     const ul = el("ul");
@@ -254,14 +254,14 @@ function renderInsights() {
         el("span", {}, t.name), el("span", { class: "v" }, `${t.rank}位`)));
     }
     topCard.appendChild(ul);
-    if (ins.total_industries) topCard.appendChild(el("div", { class: "sub" }, `全${ins.total_industries}業種中`));
+    if (ins.total_industries) topCard.appendChild(el("div", { class: "sub" }, `全${ins.total_industries} Industry中`));
   } else {
     topCard.appendChild(el("div", { class: "sub" }, "—"));
   }
   root.appendChild(topCard);
 
   // 集中業種
-  const concCard = el("div", { class: "card" }, el("h3", {}, "🔥 集中業種（3銘柄以上）"));
+  const concCard = el("div", { class: "card" }, el("h3", {}, "🔥 集中Industry（3銘柄以上）"));
   const concList = el("ul");
   (ins.concentrated || []).forEach(([ind, c]) => {
     concList.appendChild(el("li", {}, el("span", {}, ind), el("span", { class: "v" }, `${c}`)));
@@ -270,12 +270,12 @@ function renderInsights() {
   root.appendChild(concCard);
 
   // 乖離銘柄
-  const divCard = el("div", { class: "card" }, el("h3", {}, "💎 乖離（強い銘柄×弱い業種）"));
+  const divCard = el("div", { class: "card" }, el("h3", {}, "💎 乖離（強い銘柄×弱いIndustry）"));
   const divList = el("ul");
   (ins.divergent || []).forEach((d) => {
     divList.appendChild(el("li", {},
       el("span", {}, d.ticker),
-      el("span", { class: "v" }, `RS${d.rs} / 業種${d.ind_rank}位`)));
+      el("span", { class: "v" }, `RS${d.rs} / Industry${d.ind_rank}位`)));
   });
   divCard.appendChild((ins.divergent && ins.divergent.length) ? divList : el("div", { class: "sub" }, "—"));
   root.appendChild(divCard);
