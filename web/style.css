@@ -1,28 +1,33 @@
 :root {
-  --bg: #0f1419;
-  --panel: #171d26;
-  --panel-2: #1d2531;
-  --border: #2a3441;
-  --text: #d8dee9;
-  --text-dim: #8a97a8;
-  --accent: #4ea1ff;
-  --up: #3ddc84;
-  --down: #ff5c5c;
-  /* Grade colors A→E */
-  --g-a: #3ddc84;
-  --g-b: #6fd3c9;
-  --g-c: #e8c95b;
-  --g-d: #e89a5b;
-  --g-e: #e86b6b;
+  --bg: #0e1b29;            /* 紺・濃藍 */
+  --bg-top: #122236;
+  --bg-bottom: #0a1622;
+  --panel: #15263a;         /* 藍のパネル */
+  --panel-2: #1d3047;       /* 操作部・表ヘッダ */
+  --border: #2c425e;
+  --text: #ece3d2;          /* 生成り（off-white） */
+  --text-dim: #9aa7ba;
+  --accent: #d4af37;        /* 金 */
+  --accent-dim: #b89230;
+  --up: #5fbf86;            /* 青竹（上昇） */
+  --down: #e06a64;          /* 朱・茜（下落） */
+  /* Grade colors A→E（和色グラデーション） */
+  --g-a: #6cbf84;
+  --g-b: #7fb8a6;
+  --g-c: #d8b24c;
+  --g-d: #d68a4e;
+  --g-e: #d96a64;
+  --serif: "Yu Mincho", YuMincho, "Hiragino Mincho ProN", "Noto Serif JP", "MS PMincho", serif;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 45%, var(--bg-bottom) 100%);
+  background-attachment: fixed;
   color: var(--text);
-  font: 14px/1.5 -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  font: 14px/1.6 -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -33,8 +38,9 @@ a:hover { text-decoration: underline; }
   position: sticky;
   top: 0;
   z-index: 20;
-  background: linear-gradient(180deg, #131a23, #0f1419);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #16283c, #0f1d2c);
+  border-bottom: 1px solid var(--accent-dim);
+  box-shadow: 0 1px 0 rgba(212,175,55,.2), 0 6px 16px rgba(0,0,0,.4);
   padding: 14px clamp(18px, 5vw, 120px) 12px;
 }
 .topbar-main {
@@ -54,10 +60,11 @@ a:hover { text-decoration: underline; }
 }
 .title-icon { font-size: 26px; }
 .title-main {
+  font-family: var(--serif);
   font-size: 28px;
-  letter-spacing: .01em;
+  letter-spacing: .05em;
   color: var(--accent); /* グラデ非対応ブラウザ向けフォールバック */
-  background: linear-gradient(90deg, var(--accent), var(--up));
+  background: linear-gradient(90deg, #eccb5e, var(--down));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -110,7 +117,7 @@ main { padding: 16px clamp(18px, 5vw, 120px) 40px; max-width: 1500px; margin: 0 
   border-radius: 12px;
   padding: 12px 14px;
 }
-.card h3 { margin: 0 0 8px; font-size: 12px; color: var(--text-dim); font-weight: 600; letter-spacing: .03em; }
+.card h3 { margin: 0 0 8px; font-family: var(--serif); font-size: 13px; color: var(--text-dim); font-weight: 600; letter-spacing: .04em; }
 .card .big { font-size: 26px; font-variant-numeric: tabular-nums; }
 .card .sub { color: var(--text-dim); font-size: 12px; }
 .card ul { margin: 4px 0 0; padding-left: 0; list-style: none; }
@@ -133,7 +140,7 @@ main { padding: 16px clamp(18px, 5vw, 120px) 40px; max-width: 1500px; margin: 0 
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
 }
-.panel-head h2 { font-size: 15px; margin: 0; }
+.panel-head h2 { font-family: var(--serif); font-size: 16px; margin: 0; letter-spacing: .05em; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
 #filter { min-width: 220px; }
 .rs-min { color: var(--text-dim); font-size: 12px; }
@@ -191,7 +198,7 @@ tbody td {
   border-bottom: 1px solid rgba(42,52,65,.5);
   white-space: nowrap;
 }
-tbody tr:hover { background: rgba(78,161,255,.06); }
+tbody tr:hover { background: rgba(212,175,55,.07); }
 td.num { text-align: right; }
 td.ticker a { font-weight: 700; }
 .up { color: var(--up); }
@@ -240,9 +247,9 @@ td.col-narrow .trunc {
   color: #0f1419;
   white-space: nowrap;
 }
-.hv-HVC { background: #f4b740; }       /* HVC: ギャップ+大商い+高値引け（最強） */
-.hv-HVE { background: var(--up); }     /* HVE: 上場来最大出来高 */
-.hv-HV1 { background: var(--accent); } /* HV1: 直近1年で最大出来高 */
+.hv-HVC { background: #e6b54a; }       /* HVC: 金（ギャップ+大商い+高値引け・最強） */
+.hv-HVE { background: var(--up); }     /* HVE: 青竹（上場来最大出来高） */
+.hv-HV1 { background: #5b8db5; }       /* HV1: 縹（直近1年で最大出来高） */
 #hv-meta { color: var(--text-dim); font-weight: 400; margin-left: 8px; }
 
 .head-note { color: var(--text-dim); font-size: 12px; font-weight: 400; margin-left: 6px; }
