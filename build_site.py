@@ -104,6 +104,62 @@ def load_industry_rs(path: Path) -> tuple[list[dict], dict[str, int], dict[str, 
     return rankings, industry_to_rank, industry_to_rs
 
 
+def _num_or_none(s: str):
+    """数値文字列を float に。空や不正は None（JSON に NaN を出さない）。"""
+    try:
+        t = str(s).replace(",", "").strip()
+        return round(float(t), 4) if t not in ("", "-") else None
+    except ValueError:
+        return None
+
+
+def load_high_volume(data_dir: Path) -> tuple[list[dict], dict[str, str], dict]:
+    """high_volume.csv（high_volume_scan_jp.py --publish 産物）を読む。
+
+    戻り値: (パネル用リスト, code→種別ラベル(HVE/HV1), メタ情報)
+    ファイルが無ければ空で返す（HV機能はオフになる）。
+    """
+    csv_path = data_dir / "high_volume.csv"
+    meta_path = data_dir / "high_volume_meta.json"
+    if not csv_path.exists():
+        return [], {}, {}
+    headers, rows = read_csv(csv_path)
+    idx = {h: i for i, h in enumerate(headers)}
+
+    def g(row: list[str], name: str) -> str:
+        i = idx.get(name, -1)
+        return row[i] if 0 <= i < len(row) else ""
+
+    hv_list: list[dict] = []
+    hv_map: dict[str, str] = {}
+    for row in rows:
+        code = g(row, "Ticker").strip()
+        if not code:
+            continue
+        typ = g(row, "Type").strip()                  # HVE / HV1（いずれも HVC 前提）
+        hv_map[code] = typ
+        hv_list.append({
+            "ticker": code,
+            "industry": g(row, "Industry").strip(),    # 業種(33)・日本語
+            "type": typ,
+            "date": g(row, "HVdate").strip(),
+            "hvc": g(row, "HVC").strip().upper() == "Y",
+            "gap": _num_or_none(g(row, "Gap%")),
+            "close_range": _num_or_none(g(row, "CloseRange%")),
+            "relvol": _num_or_none(g(row, "RelVol(x50d)")),
+            "since": _num_or_none(g(row, "SinceHV%")),
+            "volume": to_int(g(row, "Volume")),
+            "turnover": _num_or_none(g(row, "Turnover(M)")),  # 直近平均売買代金（百万円）
+        })
+    meta: dict = {}
+    if meta_path.exists():
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception:
+            meta = {}
+    return hv_list, hv_map, meta
+
+
 def build_insights(
     headers: list[str],
     rows: list[list[str]],
@@ -241,11 +297,25 @@ def build_data(data_dir: Path, max_days: int) -> dict:
         rankings, _, _ = load_industry_rs(industry_days[date])
         trend_out.append({"date": date, "industry_rs": rankings})
 
+    # 高出来高(HVE/HV1)。抽出リストに "HV" 列を後付けし、専用パネル用リストも持つ。
+    hv_list, hv_map, hv_meta = load_high_volume(data_dir)
+    if hv_map:
+        for day in days_out:
+            cols = day["columns"]
+            if COL_TICKER not in cols:
+                continue
+            ti = cols.index(COL_TICKER)
+            day["columns"] = cols + ["HV"]
+            for r in day["rows"]:
+                tkr = r[ti] if ti < len(r) else ""
+                r.append(hv_map.get(tkr, ""))
+
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "screening_summary": SCREENING_SUMMARY,
         "days": days_out,
         "industry_trend": trend_out,
+        "high_volume": {"meta": hv_meta, "rows": hv_list},
     }
 
 

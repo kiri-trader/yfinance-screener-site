@@ -141,6 +141,9 @@ async function init() {
   // 業種RSトレンドは全期間横断なので1度だけ構築して描画する
   state.trend = buildIndustryTrend();
   renderTrend();
+
+  // 高出来高パネル（high_volume があれば描画、無ければ自動で隠れる）
+  renderHighVolume();
 }
 
 function bindControls() {
@@ -162,6 +165,11 @@ function bindControls() {
   document.getElementById("trend-mode").addEventListener("change", renderTrend);
   document.getElementById("trend-sort").addEventListener("change", renderTrend);
   document.getElementById("trend-limit").addEventListener("change", renderTrend);
+
+  const hvf = document.getElementById("hv-filter");
+  if (hvf) hvf.addEventListener("input", renderHighVolume);
+  const hvs = document.getElementById("hv-sort");
+  if (hvs) hvs.addEventListener("change", renderHighVolume);
 }
 
 // ============================================================
@@ -379,6 +387,12 @@ function renderCell(col, raw) {
     td.textContent = raw || "—";
     return td;
   }
+  // HV（高出来高フラグ）→ 色付きバッジ。該当なしは空欄。
+  if (col === "HV") {
+    const td = el("td", { class: "hv-cell" });
+    if (raw) td.appendChild(el("span", { class: `hv-badge hv-${raw}` }, raw));
+    return td;
+  }
   const isNum = !TEXT_COLS.has(col);
   const td = el("td", { class: isNum ? "num" : "" });
   td.textContent = (raw === "" || raw == null) ? "—" : raw;
@@ -439,6 +453,84 @@ async function copyTradingView() {
   } catch (e) {
     window.prompt("コピーできませんでした。手動でコピーしてください:", text);
   }
+}
+
+// ============================================================
+// 高出来高（HVE / HV1）パネル
+// ============================================================
+function hvBadge(label) {
+  return label ? el("span", { class: `hv-badge hv-${label}` }, label) : document.createTextNode("");
+}
+function hvFmt(v, nd) {
+  return (v == null || isNaN(v)) ? "—" : Number(v).toFixed(nd);
+}
+
+function renderHighVolume() {
+  const panel = document.getElementById("hv-panel");
+  if (!panel) return;
+  const hv = state.data.high_volume;
+  if (!hv || !hv.rows || !hv.rows.length) { panel.hidden = true; return; }
+  panel.hidden = false;
+
+  // メタ（対象期間・件数・更新日）
+  const meta = hv.meta || {};
+  const parts = [];
+  if (meta.window_start && meta.window_end) parts.push(`${meta.window_start}〜${meta.window_end}`);
+  parts.push(`${hv.rows.length}銘柄`);
+  if (meta.generated_at) parts.push(`更新 ${String(meta.generated_at).slice(0, 10)}`);
+  document.getElementById("hv-meta").textContent = parts.join(" / ");
+
+  const q = (document.getElementById("hv-filter").value || "").trim().toLowerCase();
+  const sortBy = document.getElementById("hv-sort").value;
+
+  let rows = hv.rows.slice();
+  if (q) rows = rows.filter((r) =>
+    r.ticker.toLowerCase().includes(q) || (r.industry || "").toLowerCase().includes(q));
+
+  const n = (v) => (v == null || isNaN(v) ? -Infinity : v);
+  const byDateDesc = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+  if (sortBy === "gap") rows.sort((a, b) => n(b.gap) - n(a.gap));
+  else if (sortBy === "since") rows.sort((a, b) => n(b.since) - n(a.since));
+  else if (sortBy === "relvol") rows.sort((a, b) => n(b.relvol) - n(a.relvol));
+  else if (sortBy === "type") rows.sort((a, b) => ((b.type === "HVE") - (a.type === "HVE")) || byDateDesc(a, b));
+  else rows.sort(byDateDesc); // recent
+
+  const head = document.getElementById("hv-head");
+  const body = document.getElementById("hv-body");
+  head.innerHTML = ""; body.innerHTML = "";
+
+  const cols = [
+    ["コード", ""], ["種別", ""], ["HV日", ""],
+    ["Gap%", "num"], ["Range%", "num"], ["RelVol", "num"], ["Since%", "num"],
+    ["業種", ""], ["売買代金(百万)", "num"],
+  ];
+  const htr = el("tr");
+  for (const [label, cls] of cols) htr.appendChild(el("th", { class: cls }, label));
+  head.appendChild(htr);
+
+  const frag = document.createDocumentFragment();
+  for (const r of rows) {
+    const tr = el("tr");
+    const tdT = el("td", { class: "ticker" });
+    tdT.appendChild(el("a", {
+      href: `https://kabutan.jp/stock/?code=${encodeURIComponent(r.ticker)}`,
+      target: "_blank", rel: "noopener",
+    }, r.ticker));
+    tr.appendChild(tdT);
+    tr.appendChild(el("td", {}, hvBadge(r.type)));
+    tr.appendChild(el("td", {}, r.date || "—"));
+    tr.appendChild(el("td", { class: "num " + (r.gap > 0 ? "up" : r.gap < 0 ? "down" : "") }, hvFmt(r.gap, 2)));
+    tr.appendChild(el("td", { class: "num" }, hvFmt(r.close_range, 0)));
+    tr.appendChild(el("td", { class: "num" }, hvFmt(r.relvol, 1)));
+    tr.appendChild(el("td", { class: "num " + (r.since > 0 ? "up" : r.since < 0 ? "down" : "") }, hvFmt(r.since, 1)));
+    const tdI = el("td", { class: "col-narrow" });
+    tdI.appendChild(el("span", { class: "trunc", title: r.industry || "" }, r.industry || "—"));
+    tr.appendChild(tdI);
+    tr.appendChild(el("td", { class: "num" }, r.turnover == null ? "—" : Math.round(r.turnover).toLocaleString()));
+    frag.appendChild(tr);
+  }
+  body.appendChild(frag);
+  document.getElementById("hv-empty").hidden = rows.length > 0;
 }
 
 // ============================================================

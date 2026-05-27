@@ -86,6 +86,29 @@
       </div>
       <p id="trend-empty" class="empty" hidden>業種RSの時系列データが足りません（2日以上必要）。</p>
     </section>
+
+    <section class="panel" id="hv-panel" hidden>
+      <div class="panel-head">
+        <h2>HVC銘柄 <span class="head-note">HVE / HV1（ギャップ≥10%・高値引け≥75% / 発生日終値から-10%超で除外）<span id="hv-meta"></span></span></h2>
+        <div class="controls">
+          <input id="hv-filter" type="search" placeholder="コード/業種で絞り込み" autocomplete="off">
+          <label class="rs-min">並び <select id="hv-sort">
+            <option value="recent" selected>最新HV日</option>
+            <option value="type">HVE優先</option>
+            <option value="gap">Gap大</option>
+            <option value="since">上昇率(Since)</option>
+            <option value="relvol">出来高倍率</option>
+          </select></label>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="hv-table">
+          <thead id="hv-head"></thead>
+          <tbody id="hv-body"></tbody>
+        </table>
+      </div>
+      <p id="hv-empty" class="empty" hidden>該当なし</p>
+    </section>
   </main>
 
   <footer class="footer">
