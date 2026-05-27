@@ -54,9 +54,9 @@
 
     <section class="panel" id="trend-panel">
       <div class="panel-head">
-        <h2>業種RS<span class="head-note">（Sector33ランキング・全期間の推移）</span></h2>
+        <h2>Industry RS<span class="head-note">（33区分・全期間の順位推移）</span></h2>
         <div class="controls">
-          <input id="trend-filter" type="search" placeholder="業種/セクターで絞り込み" autocomplete="off">
+          <input id="trend-filter" type="search" placeholder="Industry/Sectorで絞り込み" autocomplete="off">
           <label class="rs-min">単位 <select id="trend-gran">
             <option value="day">日次</option>
             <option value="week" selected>週次</option>
@@ -68,7 +68,7 @@
           <label class="rs-min">並び <select id="trend-sort">
             <option value="latest">最新RS順</option>
             <option value="delta">上昇幅順</option>
-            <option value="name">業種名順</option>
+            <option value="name">Industry名順</option>
           </select></label>
           <label class="rs-min">件数 <select id="trend-limit">
             <option value="30">上位30</option>
@@ -84,7 +84,7 @@
           <tbody id="heatmap-body"></tbody>
         </table>
       </div>
-      <p id="trend-empty" class="empty" hidden>業種RSの時系列データが足りません（2日以上必要）。</p>
+      <p id="trend-empty" class="empty" hidden>Industry RSの時系列データが足りません（2日以上必要）。</p>
     </section>
 
     <section class="panel" id="hv-panel" hidden>
@@ -112,7 +112,7 @@
   </main>
 
   <footer class="footer">
-    <span>RS / 業種RS は IBD近似（yfinance_screener 算出 / J-Quants + Yahoo Finance データ）。市場データの正確性は保証されません。</span>
+    <span>RS / Industry RS は IBD近似（yfinance_screener 算出 / J-Quants + Yahoo Finance データ）。市場データの正確性は保証されません。</span>
   </footer>
 
   <script src="app.js"></script>

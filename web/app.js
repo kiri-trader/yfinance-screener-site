@@ -667,7 +667,7 @@ function renderTrend() {
   if (cols.length < 2) {
     empty.textContent = gran === "week"
       ? "週次表示には2週以上のデータが必要です（現在は1週間分のみ）。"
-      : "業種RSの時系列データが足りません（2日以上必要）。";
+      : "Industry RSの時系列データが足りません（2日以上必要）。";
     empty.hidden = false;
     document.querySelector("#heatmap").hidden = true;
     return;
@@ -701,9 +701,9 @@ function renderTrend() {
 
   // ヘッダ: 業種 | 最新RS | 推移 | 各列(日 or 週) | 傾き
   const htr = el("tr");
-  htr.appendChild(el("th", { class: "ind-h" }, "業種"));
-  htr.appendChild(el("th", { class: "latest-rs-h", title: "最新の業種RS" }, "最新RS"));
-  htr.appendChild(el("th", { class: "spark-h", title: "業種RSの推移（左=古い, 右=新しい / 上=高い）" }, "推移"));
+  htr.appendChild(el("th", { class: "ind-h" }, "Industry"));
+  htr.appendChild(el("th", { class: "latest-rs-h", title: "最新のIndustry RS" }, "最新RS"));
+  htr.appendChild(el("th", { class: "spark-h", title: "Industry RSの推移（左=古い, 右=新しい / 上=高い）" }, "推移"));
   for (const c of cols) htr.appendChild(el("th", { title: c.title }, c.label));
   htr.appendChild(el("th", { title: "直近数期の順位の傾き（+=上昇傾向 / 1期あたりの改善数）" }, "傾き"));
   head.appendChild(htr);
