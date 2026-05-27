@@ -485,7 +485,9 @@ function renderHighVolume() {
 
   let rows = hv.rows.slice();
   if (q) rows = rows.filter((r) =>
-    r.ticker.toLowerCase().includes(q) || (r.industry || "").toLowerCase().includes(q));
+    r.ticker.toLowerCase().includes(q) ||
+    (r.name || "").toLowerCase().includes(q) ||
+    (r.industry || "").toLowerCase().includes(q));
 
   const n = (v) => (v == null || isNaN(v) ? -Infinity : v);
   const byDateDesc = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
@@ -500,7 +502,7 @@ function renderHighVolume() {
   head.innerHTML = ""; body.innerHTML = "";
 
   const cols = [
-    ["コード", ""], ["種別", ""], ["HV日", ""],
+    ["コード", ""], ["銘柄名", ""], ["種別", ""], ["HV日", ""],
     ["Gap%", "num"], ["Range%", "num"], ["RelVol", "num"], ["Since%", "num"],
     ["業種", ""], ["売買代金(百万)", "num"],
   ];
@@ -517,6 +519,9 @@ function renderHighVolume() {
       target: "_blank", rel: "noopener",
     }, r.ticker));
     tr.appendChild(tdT);
+    const tdN = el("td", { class: "col-narrow" });
+    tdN.appendChild(el("span", { class: "trunc", title: r.name || "" }, r.name || "—"));
+    tr.appendChild(tdN);
     tr.appendChild(el("td", {}, hvBadge(r.type)));
     tr.appendChild(el("td", {}, r.date || "—"));
     tr.appendChild(el("td", { class: "num " + (r.gap > 0 ? "up" : r.gap < 0 ? "down" : "") }, hvFmt(r.gap, 2)));

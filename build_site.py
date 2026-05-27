@@ -140,6 +140,7 @@ def load_high_volume(data_dir: Path) -> tuple[list[dict], dict[str, str], dict]:
         hv_map[code] = typ
         hv_list.append({
             "ticker": code,
+            "name": g(row, "Name").strip(),
             "industry": g(row, "Industry").strip(),    # 業種(33)・日本語
             "type": typ,
             "date": g(row, "HVdate").strip(),
