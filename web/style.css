@@ -35,7 +35,7 @@ a:hover { text-decoration: underline; }
   z-index: 20;
   background: linear-gradient(180deg, #131a23, #0f1419);
   border-bottom: 1px solid var(--border);
-  padding: 14px 18px 12px;
+  padding: 14px clamp(18px, 5vw, 120px) 12px;
 }
 .topbar-main {
   display: flex;
@@ -95,7 +95,7 @@ button, .btn-link {
 button:hover, .btn-link:hover { border-color: var(--accent); text-decoration: none; }
 .btn-link { display: inline-flex; align-items: center; }
 
-main { padding: 16px 18px 40px; max-width: 1500px; margin: 0 auto; }
+main { padding: 16px clamp(18px, 5vw, 120px) 40px; max-width: 1500px; margin: 0 auto; }
 
 /* ---- Insight cards ---- */
 .cards {
