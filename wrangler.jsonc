@@ -1,13 +1,8 @@
 {
-  // Cloudflare Worker。ログイン認証を通過したリクエストにのみ _site の静的アセットを配信する。
-  // run_worker_first=true で静的ファイルも必ず Worker を経由させ、認証を素通りさせない。
-  // 必須の Secret(環境変数): AUTH_USER / AUTH_PASS / AUTH_SECRET(Cookie署名鍵)
+  // Cloudflare Workers の静的アセット配信設定。build_site.py が生成する _site を配信する。
   "name": "yfinance-screener-site",
-  "compatibility_date": "2025-03-01",
-  "main": "worker/index.js",
+  "compatibility_date": "2024-11-01",
   "assets": {
-    "directory": "./_site",
-    "binding": "ASSETS",
-    "run_worker_first": true
+    "directory": "./_site"
   }
 }
