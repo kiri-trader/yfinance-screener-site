@@ -24,8 +24,8 @@ const COL = {
 
 // 既定で表示する列（その日のデータに存在するものだけ採用）
 const DEFAULT_COLS = [
-  COL.TICKER, COL.NAME, COL.CHANGE, COL.RS, COL.INDUSTRY, COL.GRADE, "HV",
-  COL.CLOSE, COL.VOL, COL.MARKET, COL.LOW52,
+  COL.TICKER, COL.NAME, COL.CHANGE, COL.CLOSE, COL.RS, COL.INDUSTRY, COL.GRADE, "HV",
+  COL.VOL, COL.LOW52, COL.MARKET,
 ];
 
 // 文字列として扱う（=数値ソート・右寄せしない）列
