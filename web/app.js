@@ -16,7 +16,7 @@ const COL = {
   LOW52: "52週安値乖離(%)",
   CLOSE: "終値(円)",
   VOL: "当日出来高",
-  AVGVOL: "10日平均出来高",
+  AVGVOL: "20日平均出来高",
   RS: "RS",
   RANK: "Industry Rank",
   GRADE: "Grade",
