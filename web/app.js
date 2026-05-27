@@ -30,8 +30,15 @@ const DEFAULT_COLS = [
 
 // 文字列として扱う（=数値ソート・右寄せしない）列
 const TEXT_COLS = new Set([
-  COL.TICKER, COL.NAME, COL.MARKET, COL.SECTOR17, COL.INDUSTRY, COL.GRADE, COL.RANK,
+  COL.TICKER, COL.NAME, COL.MARKET, COL.SECTOR17, COL.INDUSTRY, COL.GRADE,
 ]);
+
+// ヘッダ表示ラベル（CSV列名は変えず、表記を英語に統一）。Industry=業種(33)/細, Sector=業種(17)/大
+const COL_LABEL = {
+  [COL.INDUSTRY]: "Industry",
+  [COL.SECTOR17]: "Sector",
+};
+function colLabel(col) { return COL_LABEL[col] || col; }
 
 const state = {
   data: null,
@@ -216,7 +223,7 @@ function buildColMenu() {
       }
       renderTable();
     });
-    box.appendChild(el("label", {}, cb, col));
+    box.appendChild(el("label", {}, cb, colLabel(col)));
   }
 }
 
@@ -325,7 +332,7 @@ function renderTable() {
   for (const col of cols) {
     const isNum = !TEXT_COLS.has(col);
     const th = el("th", { class: isNum ? "num" : "" });
-    th.appendChild(document.createTextNode(col));
+    th.appendChild(document.createTextNode(colLabel(col)));
     if (col === state.sortCol) {
       th.appendChild(el("span", { class: "arrow" }, state.sortDir === 1 ? " ▲" : " ▼"));
     }
@@ -378,6 +385,13 @@ function renderCell(col, raw) {
     const td = el("td", {});
     const cls = ["A", "B", "C", "D", "E"].includes(g) ? g : "NA";
     td.appendChild(el("span", { class: `grade grade-${cls}` }, g || "—"));
+    return td;
+  }
+  // Industry Rank（"28/33"）→ 分母を外し順位のみ
+  if (col === COL.RANK) {
+    const r = rankNum(raw);
+    const td = el("td", { class: "num" });
+    td.textContent = isNaN(r) ? (raw || "—") : String(r);
     return td;
   }
   // 前日比(%) → 騰落色
@@ -504,7 +518,7 @@ function renderHighVolume() {
   const cols = [
     ["コード", ""], ["銘柄名", ""], ["種別", ""], ["HV日", ""],
     ["Gap%", "num"], ["Range%", "num"], ["RelVol", "num"], ["Since%", "num"],
-    ["業種", ""], ["売買代金(百万)", "num"],
+    ["Industry", ""], ["売買代金(百万)", "num"],
   ];
   const htr = el("tr");
   for (const [label, cls] of cols) htr.appendChild(el("th", { class: cls }, label));
