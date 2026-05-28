@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).parent
 
 # yf_screener.py の Discord メッセージ（build_discord_message）と同じ条件表示。
 SCREENING_SUMMARY = (
-    "前日比≥+5% | 終値100〜10,000円 | 出来高>20日平均 | "
+    "前日比≥+5% | 終値100円以上 | 出来高>20日平均 | "
     "52W安値≥+30% | 銘柄RS≥60 | 売買代金≥3千万/日"
 )
 
