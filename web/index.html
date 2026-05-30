@@ -52,6 +52,30 @@
       <p id="table-empty" class="empty" hidden>該当なし</p>
     </section>
 
+    <section class="panel" id="mylist-panel">
+      <div class="panel-head">
+        <h2>マイリスト → TVリスト<span class="head-note">手持ちのコードを貼り付け、Industry RSグレード別にブロック分け＋銘柄RS降順でTradingView取込形式（TSE:）に変換</span></h2>
+      </div>
+      <div class="mylist-body">
+        <div class="mylist-io">
+          <label class="mylist-field">
+            <span class="mylist-label">入力（改行 / カンマ / スペース区切り。<code>TSE:</code> 接頭辞や <code>.T</code> サフィックスは自動除去）</span>
+            <textarea id="mylist-input" rows="8" placeholder="7203, 6758&#10;9984&#10;TSE:8035&#10;7203.T" autocomplete="off" spellcheck="false"></textarea>
+          </label>
+          <label class="mylist-field">
+            <span class="mylist-label">出力（TradingView ウォッチリスト取込用テキスト・TSE:形式）</span>
+            <textarea id="mylist-output" rows="8" readonly placeholder="ここに変換結果が表示されます" spellcheck="false"></textarea>
+          </label>
+        </div>
+        <div class="mylist-controls">
+          <button id="mylist-run" type="button">変換</button>
+          <button id="mylist-copy" type="button" disabled>TVリストをコピー</button>
+          <span id="mylist-status" class="mylist-status"></span>
+        </div>
+        <p id="mylist-unmatched" class="mylist-unmatched" hidden></p>
+      </div>
+    </section>
+
     <section class="panel" id="trend-panel">
       <div class="panel-head">
         <h2>Industry RS<span class="head-note">（33区分・全期間の順位推移）</span></h2>

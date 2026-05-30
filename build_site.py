@@ -224,6 +224,33 @@ def build_insights(
     }
 
 
+def load_universe(data_dir: Path) -> dict:
+    """最新の `*_universe.csv`（全銘柄の コード/RS/Industry RS）を読み、
+    {コード: [rs, industry_rs]} のマップを返す。
+
+    サイトの「マイリスト→TVリスト」機能が、任意コードの銘柄RS・業種RSグレードを
+    引くために使う。ファイルが無ければ空（機能はオフ）。
+    """
+    paths = sorted(data_dir.glob("*_universe.csv"))
+    if not paths:
+        return {"date": None, "tickers": {}}
+    latest = paths[-1]  # 日付＋時刻入りのファイル名なので末尾が最新
+    date = latest.name[:10]
+    headers, rows = read_csv(latest)
+    i_t = col_index(headers, "コード")
+    i_rs = col_index(headers, "RS")
+    i_irs = col_index(headers, "Industry RS")
+    tickers: dict[str, list] = {}
+    for row in rows:
+        code = row[i_t].strip() if 0 <= i_t < len(row) else ""
+        if not code:
+            continue
+        rs = to_int(row[i_rs]) if 0 <= i_rs < len(row) else None
+        irs = to_int(row[i_irs]) if 0 <= i_irs < len(row) else None
+        tickers[code] = [rs, irs]
+    return {"date": date, "tickers": tickers}
+
+
 def collect_days(data_dir: Path) -> dict[str, dict]:
     """data/ を走査し、日付ごとに最新タイムスタンプの SC / industry_rs を選ぶ。
 
@@ -345,9 +372,19 @@ def main() -> None:
         encoding="utf-8",
     )
 
+    # RS対応表は別ファイル（universe.json）。本体ページの初期ロードを重くしないよう、
+    # 「マイリスト→TVリスト」機能が使うときだけ fetch する。
+    universe = load_universe(data_dir)
+    universe["generated_at"] = data["generated_at"]
+    (out_dir / "universe.json").write_text(
+        json.dumps(universe, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+
     n_days = len(data["days"])
     n_rows = sum(d["count"] for d in data["days"])
-    print(f"built {out_dir}/  (days={n_days}, rows={n_rows})")
+    n_uni = len(universe["tickers"])
+    print(f"built {out_dir}/  (days={n_days}, rows={n_rows}, universe={n_uni})")
 
 
 if __name__ == "__main__":

@@ -166,6 +166,11 @@ function bindControls() {
   });
   document.getElementById("copy-tv").addEventListener("click", copyTradingView);
 
+  const myRun = document.getElementById("mylist-run");
+  if (myRun) myRun.addEventListener("click", runMyList);
+  const myCopy = document.getElementById("mylist-copy");
+  if (myCopy) myCopy.addEventListener("click", copyMyList);
+
   const tf = document.getElementById("trend-filter");
   tf.addEventListener("input", renderTrend);
   document.getElementById("trend-gran").addEventListener("change", renderTrend);
@@ -465,6 +470,129 @@ async function copyTradingView() {
     btn.textContent = "コピーしました ✓";
     setTimeout(() => { btn.textContent = orig; }, 1500);
   } catch (e) {
+    window.prompt("コピーできませんでした。手動でコピーしてください:", text);
+  }
+}
+
+// ============================================================
+// マイリスト → TVリスト（任意コードをグレード別ブロック＋銘柄RS降順に）
+// ============================================================
+let universeCache = null;  // {date, tickers:{コード:[rs,irs]}} / "error" / null(未取得)
+
+async function ensureUniverse() {
+  if (universeCache && universeCache !== "error") return universeCache;
+  try {
+    const resp = await fetch("universe.json", { cache: "no-cache" });
+    if (!resp.ok) throw new Error(resp.status);
+    universeCache = await resp.json();
+  } catch (e) {
+    universeCache = "error";
+  }
+  return universeCache;
+}
+
+function parseMyTickers(text) {
+  // 改行/カンマ/スペース/セミコロン区切り。TSE: 等の接頭辞と .T/.JP サフィックスを除去・
+  // 大文字化・重複排除（順序保持）。
+  const seen = new Set();
+  const out = [];
+  for (let tok of String(text).split(/[\s,;]+/)) {
+    tok = tok.trim().toUpperCase();
+    if (!tok) continue;
+    const c = tok.indexOf(":");
+    if (c >= 0) tok = tok.slice(c + 1);     // 例: TSE:7203 -> 7203
+    tok = tok.replace(/\.(T|JP)$/, "");      // 例: 7203.T -> 7203
+    if (!tok || seen.has(tok)) continue;
+    seen.add(tok);
+    out.push(tok);
+  }
+  return out;
+}
+
+async function runMyList() {
+  const input = document.getElementById("mylist-input");
+  const output = document.getElementById("mylist-output");
+  const status = document.getElementById("mylist-status");
+  const unmatchedEl = document.getElementById("mylist-unmatched");
+  const copyBtn = document.getElementById("mylist-copy");
+
+  const tickers = parseMyTickers(input.value);
+  if (!tickers.length) {
+    status.textContent = "コードを入力してください";
+    output.value = "";
+    copyBtn.disabled = true;
+    unmatchedEl.hidden = true;
+    return;
+  }
+
+  status.textContent = "RSデータを読み込み中…";
+  const uni = await ensureUniverse();
+  if (uni === "error" || !uni || !uni.tickers) {
+    status.textContent = "universe.json を読み込めませんでした（サーバー経由で開いているか確認）";
+    return;
+  }
+
+  const sections = [
+    ["Ind Grade A", new Set(["A"])],
+    ["Ind Grade B", new Set(["B"])],
+    ["Ind Grade C", new Set(["C"])],
+    ["Ind Grade D/E/NA", new Set(["D", "E", "NA"])],
+  ];
+
+  const items = [];
+  const unmatched = [];
+  for (const t of tickers) {
+    const rec = uni.tickers[t];
+    if (!rec) unmatched.push(t);
+    const rs = rec ? rec[0] : null;
+    const irs = rec ? rec[1] : null;
+    items.push({
+      ticker: t,
+      rs: rs == null ? NaN : rs,
+      irs: irs == null ? NaN : irs,
+      grade: gradeFromRS(irs == null ? NaN : irs),
+    });
+  }
+
+  const parts = [];
+  for (const [name, keys] of sections) {
+    const group = items.filter((it) => keys.has(it.grade));
+    if (!group.length) continue;
+    // 銘柄RS降順 → Industry RS降順 → コード順
+    group.sort((a, b) =>
+      (isNaN(b.rs) ? -1 : b.rs) - (isNaN(a.rs) ? -1 : a.rs) ||
+      (isNaN(b.irs) ? -1 : b.irs) - (isNaN(a.irs) ? -1 : a.irs) ||
+      String(a.ticker).localeCompare(String(b.ticker)));
+    parts.push("###" + name, ...group.map((it) => "TSE:" + it.ticker));
+  }
+
+  output.value = parts.join(",");
+  copyBtn.disabled = parts.length === 0;
+
+  const matched = tickers.length - unmatched.length;
+  status.textContent =
+    `${tickers.length}銘柄を変換（ヒット ${matched} / 未ヒット ${unmatched.length}）｜RS基準日 ${uni.date || "—"}`;
+  if (unmatched.length) {
+    unmatchedEl.hidden = false;
+    unmatchedEl.textContent =
+      `未ヒット（RSデータ無し→D/E/NAブロックに収容）: ${unmatched.join(", ")}`;
+  } else {
+    unmatchedEl.hidden = true;
+  }
+}
+
+async function copyMyList() {
+  const output = document.getElementById("mylist-output");
+  const btn = document.getElementById("mylist-copy");
+  const text = output.value;
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    const orig = btn.textContent;
+    btn.textContent = "コピーしました ✓";
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  } catch (e) {
+    output.select();
     window.prompt("コピーできませんでした。手動でコピーしてください:", text);
   }
 }
