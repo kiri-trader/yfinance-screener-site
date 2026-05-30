@@ -250,6 +250,20 @@ td.col-narrow .trunc {
 .hv-HVC { background: #e6b54a; }       /* HVC: 金（ギャップ+大商い+高値引け・最強） */
 .hv-HVE { background: var(--up); }     /* HVE: 青竹（上場来最大出来高） */
 .hv-HV1 { background: #5b8db5; }       /* HV1: 縹（直近1年で最大出来高） */
+
+/* EPS/売上のYoY加速バッジ（加速=緑。YoY%はツールチップ） */
+.accel-cell { white-space: nowrap; text-align: center; }
+.accel-badge {
+  display: inline-block;
+  border-radius: 5px;
+  padding: 1px 7px;
+  font-weight: 700;
+  font-size: 11px;
+  color: #0f1419;
+  white-space: nowrap;
+}
+.accel-up { background: var(--up); }     /* 加速 */
+.accel-flat { color: var(--text-dim); }  /* 非加速（YoY%はツールチップで確認） */
 #hv-meta { color: var(--text-dim); font-weight: 400; margin-left: 8px; }
 
 .head-note { color: var(--text-dim); font-size: 12px; font-weight: 400; margin-left: 6px; }

@@ -161,6 +161,46 @@ def load_high_volume(data_dir: Path) -> tuple[list[dict], dict[str, str], dict]:
     return hv_list, hv_map, meta
 
 
+def load_earnings_accel(data_dir: Path) -> tuple[dict[str, dict], dict]:
+    """earnings_accel.csv（earnings_accel_jp.py --publish 産物）を読む。
+
+    戻り値: (code→{eps_accel, eps_yoy_q0, eps_yoy_q1, rev_accel, rev_yoy_q0, rev_yoy_q1}, メタ)
+    ファイルが無ければ空で返す（EPS/売上加速機能はオフ）。
+    accel フラグは 'Y'(加速)/'N'(非加速)/''(判定不可)、yoy は %値の数値。
+    """
+    csv_path = data_dir / "earnings_accel.csv"
+    meta_path = data_dir / "earnings_accel_meta.json"
+    if not csv_path.exists():
+        return {}, {}
+    headers, rows = read_csv(csv_path)
+    idx = {h: i for i, h in enumerate(headers)}
+
+    def g(row: list[str], name: str) -> str:
+        i = idx.get(name, -1)
+        return row[i] if 0 <= i < len(row) else ""
+
+    accel_map: dict[str, dict] = {}
+    for row in rows:
+        code = g(row, "Ticker").strip()
+        if not code:
+            continue
+        accel_map[code] = {
+            "eps_accel": g(row, "EPS_accel").strip(),
+            "eps_yoy_q0": _num_or_none(g(row, "EPS_YoY_Q0")),
+            "eps_yoy_q1": _num_or_none(g(row, "EPS_YoY_Q1")),
+            "rev_accel": g(row, "Rev_accel").strip(),
+            "rev_yoy_q0": _num_or_none(g(row, "Rev_YoY_Q0")),
+            "rev_yoy_q1": _num_or_none(g(row, "Rev_YoY_Q1")),
+        }
+    meta: dict = {}
+    if meta_path.exists():
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception:
+            meta = {}
+    return accel_map, meta
+
+
 def build_insights(
     headers: list[str],
     rows: list[list[str]],
@@ -338,12 +378,27 @@ def build_data(data_dir: Path, max_days: int) -> dict:
                 tkr = r[ti] if ti < len(r) else ""
                 r.append(hv_map.get(tkr, ""))
 
+    # 四半期EPS/売上のYoY加速。抽出リストに "EPS加速" / "売上加速" 列を後付けする。
+    accel_map, accel_meta = load_earnings_accel(data_dir)
+    if accel_map:
+        for day in days_out:
+            cols = day["columns"]
+            if COL_TICKER not in cols:
+                continue
+            ti = cols.index(COL_TICKER)
+            day["columns"] = cols + ["EPS加速", "売上加速"]
+            for r in day["rows"]:
+                a = accel_map.get((r[ti] if ti < len(r) else "").strip())
+                r.append(a["eps_accel"] if a else "")
+                r.append(a["rev_accel"] if a else "")
+
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "screening_summary": SCREENING_SUMMARY,
         "days": days_out,
         "industry_trend": trend_out,
         "high_volume": {"meta": hv_meta, "rows": hv_list},
+        "earnings_accel": {"meta": accel_meta, "map": accel_map},
     }
 
 

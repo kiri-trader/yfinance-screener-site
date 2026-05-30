@@ -24,13 +24,13 @@ const COL = {
 
 // 既定で表示する列（その日のデータに存在するものだけ採用）
 const DEFAULT_COLS = [
-  COL.TICKER, COL.NAME, COL.CHANGE, COL.CLOSE, COL.RS, COL.INDUSTRY, COL.GRADE, "HV",
+  COL.TICKER, COL.NAME, COL.CHANGE, COL.CLOSE, COL.RS, "EPS加速", "売上加速", COL.INDUSTRY, COL.GRADE, "HV",
   COL.VOL, COL.LOW52, COL.MARKET,
 ];
 
 // 文字列として扱う（=数値ソート・右寄せしない）列
 const TEXT_COLS = new Set([
-  COL.TICKER, COL.NAME, COL.MARKET, COL.SECTOR17, COL.INDUSTRY, COL.GRADE,
+  COL.TICKER, COL.NAME, COL.MARKET, COL.SECTOR17, COL.INDUSTRY, COL.GRADE, "EPS加速", "売上加速",
 ]);
 
 // ヘッダ表示ラベル（CSV列名は変えず、表記を英語に統一）。Industry=業種(33)/細, Sector=業種(17)/大
@@ -359,14 +359,30 @@ function renderTable() {
     for (const col of cols) {
       const idx = allCols.indexOf(col);
       const raw = idx >= 0 ? row[idx] : "";
-      tr.appendChild(renderCell(col, raw));
+      tr.appendChild(renderCell(col, raw, row));
     }
     frag.appendChild(tr);
   }
   body.appendChild(frag);
 }
 
-function renderCell(col, raw) {
+// EPS/売上加速のセル（抽出リスト・HVパネル共通）。earnings_accel.map から code で引く。
+function accelCell(ticker, isEps) {
+  const td = el("td", { class: "accel-cell" });
+  const map = (state.data.earnings_accel && state.data.earnings_accel.map) || {};
+  const a = map[String(ticker || "").trim()];
+  const flag = a ? (isEps ? a.eps_accel : a.rev_accel) : "";
+  if (flag !== "Y" && flag !== "N") return td;
+  const q0 = isEps ? a.eps_yoy_q0 : a.rev_yoy_q0;
+  const q1 = isEps ? a.eps_yoy_q1 : a.rev_yoy_q1;
+  const pct = (v) => (v == null ? "—" : (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%");
+  const title = `今期YoY ${pct(q0)} / 前期YoY ${pct(q1)}（累計・前年同期比）`;
+  if (flag === "Y") td.appendChild(el("span", { class: "accel-badge accel-up", title }, "▲加速"));
+  else td.appendChild(el("span", { class: "accel-flat", title }, "—"));
+  return td;
+}
+
+function renderCell(col, raw, row) {
   // コード → kabutan（株探）の個別銘柄ページ
   if (col === COL.TICKER) {
     const td = el("td", { class: "ticker" });
@@ -411,6 +427,11 @@ function renderCell(col, raw) {
     const td = el("td", { class: "hv-cell" });
     if (raw) td.appendChild(el("span", { class: `hv-badge hv-${raw}` }, raw));
     return td;
+  }
+  // EPS加速 / 売上加速 → バッジ（共通ヘルパー）。コードから earnings_accel.map を引く。
+  if (col === "EPS加速" || col === "売上加速") {
+    const ti = state.day.columns.indexOf(COL.TICKER);
+    return accelCell(row && ti >= 0 ? row[ti] : "", col === "EPS加速");
   }
   const isNum = !TEXT_COLS.has(col);
   const td = el("td", { class: isNum ? "num" : "" });
@@ -654,7 +675,7 @@ function renderHighVolume() {
   head.innerHTML = ""; body.innerHTML = "";
 
   const cols = [
-    ["コード", ""], ["銘柄名", ""], ["種別", ""], ["HV日", ""],
+    ["コード", ""], ["銘柄名", ""], ["種別", ""], ["EPS加速", ""], ["売上加速", ""], ["HV日", ""],
     ["Gap%", "num"], ["Range%", "num"], ["RelVol", "num"], ["Since%", "num"],
     ["Industry", ""], ["売買代金(百万)", "num"],
   ];
@@ -675,6 +696,8 @@ function renderHighVolume() {
     tdN.appendChild(el("span", { class: "trunc", title: r.name || "" }, r.name || "—"));
     tr.appendChild(tdN);
     tr.appendChild(el("td", {}, hvBadge(r.type)));
+    tr.appendChild(accelCell(r.ticker, true));
+    tr.appendChild(accelCell(r.ticker, false));
     tr.appendChild(el("td", {}, r.date || "—"));
     tr.appendChild(el("td", { class: "num " + (r.gap > 0 ? "up" : r.gap < 0 ? "down" : "") }, hvFmt(r.gap, 2)));
     tr.appendChild(el("td", { class: "num" }, hvFmt(r.close_range, 0)));
