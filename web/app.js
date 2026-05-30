@@ -191,6 +191,7 @@ function selectDay(index) {
   const day = state.data.days[index];
   state.day = day;
   document.getElementById("day-count").textContent = `${day.count} 銘柄`;
+  document.getElementById("screen-meta").textContent = `${day.date}・${day.count}銘柄`;
 
   // 表示列: 既定セットのうち存在するもの。維持できるなら現在の選択を尊重
   const present = new Set(day.columns);
