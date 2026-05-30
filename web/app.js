@@ -554,16 +554,26 @@ async function runMyList() {
     });
   }
 
+  // 銘柄RS降順 → Industry RS降順 → コード順
+  const sortRows = (a, b) =>
+    (isNaN(b.rs) ? -1 : b.rs) - (isNaN(a.rs) ? -1 : a.rs) ||
+    (isNaN(b.irs) ? -1 : b.irs) - (isNaN(a.irs) ? -1 : a.irs) ||
+    String(a.ticker).localeCompare(String(b.ticker));
+
+  // 銘柄RS<60（有効値）は Industry RS グレードと無関係に末尾の別ブロックへ分離
+  const weak = items.filter((it) => !isNaN(it.rs) && it.rs < 60);
+  const weakSet = new Set(weak);
+
   const parts = [];
   for (const [name, keys] of sections) {
-    const group = items.filter((it) => keys.has(it.grade));
+    const group = items.filter((it) => keys.has(it.grade) && !weakSet.has(it));
     if (!group.length) continue;
-    // 銘柄RS降順 → Industry RS降順 → コード順
-    group.sort((a, b) =>
-      (isNaN(b.rs) ? -1 : b.rs) - (isNaN(a.rs) ? -1 : a.rs) ||
-      (isNaN(b.irs) ? -1 : b.irs) - (isNaN(a.irs) ? -1 : a.irs) ||
-      String(a.ticker).localeCompare(String(b.ticker)));
+    group.sort(sortRows);
     parts.push("###" + name, ...group.map((it) => "TSE:" + it.ticker));
+  }
+  if (weak.length) {
+    weak.sort(sortRows);
+    parts.push("###Stock RS<60", ...weak.map((it) => "TSE:" + it.ticker));
   }
 
   output.value = parts.join(",");
